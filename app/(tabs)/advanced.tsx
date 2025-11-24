@@ -622,7 +622,8 @@ export default function AdvancedCalculatorScreen() {
                     style={styles.input}
                     value={reverseFinalPrice}
                     onChangeText={handleReverseFinalPriceChange}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholder="0"
                     placeholderTextColor="#666"
                     onFocus={() => scrollToInput('reverseFinalPrice')}
@@ -643,7 +644,8 @@ export default function AdvancedCalculatorScreen() {
                     style={styles.input}
                     value={reverseMakingCharge}
                     onChangeText={handleReverseMakingChargeChange}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholderTextColor="#666"
                     onFocus={() => scrollToInput('reverseMaking')}
                     accessible={true}
@@ -664,7 +666,8 @@ export default function AdvancedCalculatorScreen() {
                     style={styles.input}
                     value={reverseGst}
                     onChangeText={handleReverseGstChange}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholderTextColor="#666"
                     onFocus={() => scrollToInput('reverseGst')}
                     accessible={true}
@@ -762,7 +765,8 @@ export default function AdvancedCalculatorScreen() {
                     style={[styles.converterInput, selectedMeasurement === 'weight' && styles.converterInputActive]}
                     value={weightValue}
                     onChangeText={(text) => handleMeasurementInputChange('weight', text)}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholder="0"
                     placeholderTextColor="#666"
                     onFocus={() => {
@@ -784,7 +788,8 @@ export default function AdvancedCalculatorScreen() {
                     style={[styles.converterInput, selectedMeasurement === 'carat' && styles.converterInputActive]}
                     value={caratValue}
                     onChangeText={(text) => handleMeasurementInputChange('carat', text)}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholder="0"
                     placeholderTextColor="#666"
                     onFocus={() => {
@@ -806,7 +811,8 @@ export default function AdvancedCalculatorScreen() {
                     style={[styles.converterInput, selectedMeasurement === 'ratti' && styles.converterInputActive]}
                     value={rattiValue}
                     onChangeText={(text) => handleMeasurementInputChange('ratti', text)}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholder="0"
                     placeholderTextColor="#666"
                     onFocus={() => {

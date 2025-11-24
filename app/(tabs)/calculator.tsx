@@ -662,7 +662,8 @@ export default function GoldCalculatorScreen() {
                     style={styles.input}
                     value={basePrice}
                     onChangeText={handleBasePriceChange}
-                    keyboardType="numeric"
+                    keyboardType="decimal-pad"
+                    inputMode="decimal"
                     placeholderTextColor="#666"
                     onFocus={() => scrollToInput('basePrice')}
                     accessible={true}
@@ -683,7 +684,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.purityInput}
                       value={carat9Purity}
                       onChangeText={handleCarat9Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('carat9')}
                       accessible={true}
@@ -704,7 +706,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.purityInput}
                       value={carat18Purity}
                       onChangeText={handleCarat18Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('carat18')}
                       accessible={true}
@@ -725,7 +728,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.purityInput}
                       value={carat20Purity}
                       onChangeText={handleCarat20Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('carat20')}
                       accessible={true}
@@ -746,7 +750,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.purityInput}
                       value={carat22Purity}
                       onChangeText={handleCarat22Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('carat22')}
                       accessible={true}
@@ -811,7 +816,8 @@ export default function GoldCalculatorScreen() {
                             style={styles.customPriceInput}
                             value={customPrices['9K'] || ''}
                             onChangeText={(text) => handleCustomPriceChange('9K', text)}
-                            keyboardType="numeric"
+                            keyboardType="decimal-pad"
+                            inputMode="decimal"
                             placeholder={String(calculatedCarat9Price)}
                             placeholderTextColor="#666"
                             onFocus={() => scrollToInput('custom9')}
@@ -845,7 +851,8 @@ export default function GoldCalculatorScreen() {
                             style={styles.customPriceInput}
                             value={customPrices['18K'] || ''}
                             onChangeText={(text) => handleCustomPriceChange('18K', text)}
-                            keyboardType="numeric"
+                            keyboardType="decimal-pad"
+                            inputMode="decimal"
                             placeholder={String(calculatedCarat18Price)}
                             placeholderTextColor="#666"
                             onFocus={() => scrollToInput('custom18')}
@@ -879,7 +886,8 @@ export default function GoldCalculatorScreen() {
                             style={styles.customPriceInput}
                             value={customPrices['20K'] || ''}
                             onChangeText={(text) => handleCustomPriceChange('20K', text)}
-                            keyboardType="numeric"
+                            keyboardType="decimal-pad"
+                            inputMode="decimal"
                             placeholder={String(calculatedCarat20Price)}
                             placeholderTextColor="#666"
                             onFocus={() => scrollToInput('custom20')}
@@ -913,7 +921,8 @@ export default function GoldCalculatorScreen() {
                             style={styles.customPriceInput}
                             value={customPrices['22K'] || ''}
                             onChangeText={(text) => handleCustomPriceChange('22K', text)}
-                            keyboardType="numeric"
+                            keyboardType="decimal-pad"
+                            inputMode="decimal"
                             placeholder={String(calculatedCarat22Price)}
                             placeholderTextColor="#666"
                             onFocus={() => scrollToInput('custom22')}
@@ -974,7 +983,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.percentInput}
                       value={makingCharge1}
                       onChangeText={handleMakingCharge1Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('making1')}
                       accessible={true}
@@ -995,7 +1005,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.percentInput}
                       value={makingCharge2}
                       onChangeText={handleMakingCharge2Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('making2')}
                       accessible={true}
@@ -1016,7 +1027,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.percentInput}
                       value={makingCharge3}
                       onChangeText={handleMakingCharge3Change}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('making3')}
                       accessible={true}
@@ -1037,7 +1049,8 @@ export default function GoldCalculatorScreen() {
                       style={styles.percentInput}
                       value={gstPercent}
                       onChangeText={handleGstChange}
-                      keyboardType="numeric"
+                      keyboardType="decimal-pad"
+                      inputMode="decimal"
                       placeholderTextColor="#666"
                       onFocus={() => scrollToInput('gst')}
                       accessible={true}
@@ -1095,7 +1108,8 @@ export default function GoldCalculatorScreen() {
                   ]}
                   value={basePrice}
                   onChangeText={handleBasePriceChange}
-                  keyboardType="numeric"
+                  keyboardType="decimal-pad"
+                  inputMode="decimal"
                   placeholderTextColor="#8B7355"
                   onFocus={() => scrollToInput('basePriceMain')}
                   accessible={true}
@@ -1208,7 +1222,8 @@ export default function GoldCalculatorScreen() {
                   style={styles.input}
                   value={weight}
                   onChangeText={handleWeightChange}
-                  keyboardType="numeric"
+                  keyboardType="decimal-pad"
+                  inputMode="decimal"
                   placeholder="0"
                   placeholderTextColor="#666"
                   onFocus={() => scrollToInput('weight')}
