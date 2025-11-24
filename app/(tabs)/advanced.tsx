@@ -465,7 +465,8 @@ export default function AdvancedCalculatorScreen() {
               }
             );
           }
-        } catch (error) {
+        } catch (err) {
+          console.log('Scroll measurement error');
         }
       }, Platform.OS === 'android' ? 400 : 150);
     }
