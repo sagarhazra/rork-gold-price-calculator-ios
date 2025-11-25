@@ -45,10 +45,10 @@ export default function AdvancedCalculatorScreen() {
 
   const [basePrice, setBasePrice] = useState<string>('0');
   const [customPrices, setCustomPrices] = useState<CustomPrices>({});
-  const [carat9Purity, setCarat9Purity] = useState<string>('38');
-  const [carat18Purity, setCarat18Purity] = useState<string>('76');
-  const [carat20Purity, setCarat20Purity] = useState<string>('84');
-  const [carat22Purity, setCarat22Purity] = useState<string>('92');
+  const [carat9Purity] = useState<string>('38');
+  const [carat18Purity] = useState<string>('76');
+  const [carat20Purity] = useState<string>('84');
+  const [carat22Purity] = useState<string>('92');
 
   const [reverseFinalPrice, setReverseFinalPrice] = useState<string>('');
   const [reverseMakingCharge, setReverseMakingCharge] = useState<string>('10');
@@ -465,7 +465,7 @@ export default function AdvancedCalculatorScreen() {
               }
             );
           }
-        } catch (err) {
+        } catch {
           console.log('Scroll measurement error');
         }
       }, Platform.OS === 'android' ? 400 : 150);
