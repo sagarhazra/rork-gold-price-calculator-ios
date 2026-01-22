@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 90
     environment:
-      xcode: "16.0"  # Stable for Expo 51+/RN 0.81, avoids C++ errors in Reanimated
+      xcode: "16.1"  # Upgrade to meet RN 0.81+ newArch requirement
     scripts:
       - name: Install Bun and Dependencies
         script: |
