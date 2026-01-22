@@ -2,25 +2,25 @@ workflows:
   unsigned-ios-ipa:
     name: Unsigned iOS IPA Build
     instance_type: mac_mini_m2
-    max_build_duration: 90
+    max_build_duration: 120  # Increased for complex builds
     environment:
-      xcode: "16.1"
+      xcode: "15.4"  # Downgrade to stable version - fixes Reanimated C++ compile errors
     scripts:
       - name: Install Bun and Dependencies
         script: |
           curl -fsSL https://bun.sh/install | bash
           export PATH="$HOME/.bun/bin:$PATH"
-          rm -rf node_modules ios android
+          rm -rf node_modules ios android ~/Library/Developer/Xcode/DerivedData/*  # Deep clean DerivedData
           bun install
-          npm install -g expo-cli
+          npm install -g expo-cli@latest  # Latest Expo CLI for compatibility
 
       - name: Expo Prebuild and Pod Install
         script: |
-          npx expo prebuild --platform ios --clean || { echo "Prebuild failed!"; exit 1; }
+          npx expo prebuild --platform ios --clean --no-install || { echo "Prebuild failed!"; exit 1; }
           echo "=== FULL ios/ listing after prebuild ==="
-          ls -laR ios/   # Recursive to see inside folders
+          ls -laR ios/
           cd ios || { echo "No ios/ generated!"; exit 1; }
-          pod install --repo-update || { echo "Pod install failed!"; exit 1; }
+          pod install --repo-update --verbose || { echo "Pod install failed!"; exit 1; }  # Verbose for pod errors
           echo "=== FULL ios/ listing after pod install ==="
           ls -laR .
           cd ..
@@ -52,24 +52,31 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            -verbose  # Full output for compile errors
 
           cd ..
           echo "Archive created? Listing Applications:"
-          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ || echo "No Applications folder - archive likely empty/failed!"
+          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ 2>/dev/null || echo "No Applications folder - archive likely empty/failed!"
           mkdir -p ipa/Payload
-          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app ipa/Payload/ 2>/dev/null || { echo "Failed to copy .app - check if it exists above!"; exit 1; }
+          APP_PATH="build/GoldPriceCalculator.xcarchive/Products/Applications/*.app"
+          if [ ! -d "$(dirname "$APP_PATH")" ]; then
+            # Fallback to DerivedData if archive path empty
+            APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/*/Build/Intermediates.noindex/ArchiveIntermediates/GoldPriceCalculator/InstallationBuildProductsLocation/Applications/*.app"
+          fi
+          cp -r "$APP_PATH" ipa/Payload/ 2>/dev/null || { echo "Failed to copy .app - check listing above!"; exit 1; }
           echo "Payload after copy:"
           ls -la ipa/Payload/
           cd ipa
           zip -r ../unsigned.ipa Payload
           cd ..
           echo "Final IPA:"
-          ls -lh unsigned.ipa
+          ls -lh unsigned.ipa  # Should be ~20-100MB
 
     artifacts:
       - unsigned.ipa
       - build/**/*.xcarchive
+      - ios/**  # For debug
 
     publishing:
       email:
