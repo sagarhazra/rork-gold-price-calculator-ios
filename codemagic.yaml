@@ -2,45 +2,40 @@ workflows:
   unsigned-ios-ipa:
     name: Unsigned iOS IPA Build
     instance_type: mac_mini_m2
-    max_build_duration: 120  # Increased for complex builds
+    max_build_duration: 120
     environment:
-      xcode: "15.4"  # Downgrade to stable version - fixes Reanimated C++ compile errors
+      xcode: "16.1"  # This version is supported and matches your log
     scripts:
       - name: Install Bun and Dependencies
         script: |
           curl -fsSL https://bun.sh/install | bash
           export PATH="$HOME/.bun/bin:$PATH"
-          rm -rf node_modules ios android ~/Library/Developer/Xcode/DerivedData/*  # Deep clean DerivedData
+          rm -rf node_modules ios android
           bun install
-          npm install -g expo-cli@latest  # Latest Expo CLI for compatibility
+          npm install -g expo-cli
 
       - name: Expo Prebuild and Pod Install
         script: |
-          npx expo prebuild --platform ios --clean --no-install || { echo "Prebuild failed!"; exit 1; }
-          echo "=== FULL ios/ listing after prebuild ==="
-          ls -laR ios/
+          npx expo prebuild --platform ios --clean || { echo "Prebuild failed!"; exit 1; }
+          echo "ios/ contents after prebuild:"
+          ls -la ios/
           cd ios || { echo "No ios/ generated!"; exit 1; }
-          pod install --repo-update --verbose || { echo "Pod install failed!"; exit 1; }  # Verbose for pod errors
-          echo "=== FULL ios/ listing after pod install ==="
-          ls -laR .
+          pod install --repo-update || { echo "Pod install failed!"; exit 1; }
+          echo "ios/ after pod install:"
+          ls -la
           cd ..
 
       - name: Build Unsigned Archive and IPA
         script: |
           cd ios
-          # Better detection: find the actual .xcworkspace directory
           WORKSPACE_DIR=$(find . -type d -name "*.xcworkspace" -maxdepth 2 | head -n 1 | sed 's|^\./||')
           if [ -z "$WORKSPACE_DIR" ]; then
-            echo "ERROR: No .xcworkspace directory found in ios/!"
-            ls -laR .
+            echo "ERROR: No .xcworkspace found!"
+            ls -la
             exit 1
           fi
-          echo "Found workspace directory: $WORKSPACE_DIR"
-
-          # Scheme is usually the basename without .xcworkspace
           SCHEME=$(basename "$WORKSPACE_DIR" .xcworkspace)
-          echo "Using scheme: $SCHEME"
-
+          echo "Found workspace: $WORKSPACE_DIR | Scheme: $SCHEME"
           xcodebuild archive \
             -workspace "$WORKSPACE_DIR" \
             -scheme "$SCHEME" \
@@ -52,31 +47,24 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            -verbose  # Full output for compile errors
+            PROVISIONING_PROFILE_SPECIFIER=""
 
           cd ..
-          echo "Archive created? Listing Applications:"
-          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ 2>/dev/null || echo "No Applications folder - archive likely empty/failed!"
+          echo "Archive contents:"
+          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ || echo "No .app generated!"
           mkdir -p ipa/Payload
-          APP_PATH="build/GoldPriceCalculator.xcarchive/Products/Applications/*.app"
-          if [ ! -d "$(dirname "$APP_PATH")" ]; then
-            # Fallback to DerivedData if archive path empty
-            APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/*/Build/Intermediates.noindex/ArchiveIntermediates/GoldPriceCalculator/InstallationBuildProductsLocation/Applications/*.app"
-          fi
-          cp -r "$APP_PATH" ipa/Payload/ 2>/dev/null || { echo "Failed to copy .app - check listing above!"; exit 1; }
-          echo "Payload after copy:"
+          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app ipa/Payload/ || { echo "No .app to copy!"; exit 1; }
+          echo "Payload contents:"
           ls -la ipa/Payload/
           cd ipa
           zip -r ../unsigned.ipa Payload
           cd ..
-          echo "Final IPA:"
-          ls -lh unsigned.ipa  # Should be ~20-100MB
+          echo "IPA created:"
+          ls -lh unsigned.ipa  # Should be 20-100MB
 
     artifacts:
       - unsigned.ipa
       - build/**/*.xcarchive
-      - ios/**  # For debug
 
     publishing:
       email:
