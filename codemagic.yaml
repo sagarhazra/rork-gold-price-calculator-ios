@@ -4,7 +4,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 90
     environment:
-      xcode: "16.1"  # Upgrade to meet RN 0.81+ newArch requirement
+      xcode: "16.1"
     scripts:
       - name: Install Bun and Dependencies
         script: |
@@ -12,73 +12,64 @@ workflows:
           export PATH="$HOME/.bun/bin:$PATH"
           rm -rf node_modules ios android
           bun install
-          npm install -g expo-cli  # Ensures Expo CLI for prebuild
+          npm install -g expo-cli
 
       - name: Expo Prebuild and Pod Install
         script: |
           npx expo prebuild --platform ios --clean || { echo "Prebuild failed!"; exit 1; }
-          echo "ios/ contents after prebuild:"
-          ls -la ios/
+          echo "=== FULL ios/ listing after prebuild ==="
+          ls -laR ios/   # Recursive to see inside folders
           cd ios || { echo "No ios/ generated!"; exit 1; }
           pod install --repo-update || { echo "Pod install failed!"; exit 1; }
-          echo "ios/ after pod install:"
-          ls -la
+          echo "=== FULL ios/ listing after pod install ==="
+          ls -laR .
           cd ..
 
       - name: Build Unsigned Archive and IPA
         script: |
           cd ios
-          # Dynamic detection (Expo sanitizes name to GoldPriceCalculator)
-          WORKSPACE=$(ls *.xcworkspace 2>/dev/null | head -1)
-          if [ -z "$WORKSPACE" ]; then
-            echo "No .xcworkspace—falling back to .xcodeproj (rare for Expo)"
-            PROJECT=$(ls *.xcodeproj | head -1)
-            SCHEME=$(basename "$PROJECT" .xcodeproj)
-            xcodebuild archive \
-              -project "$PROJECT" \
-              -scheme "$SCHEME" \
-              -configuration Release \
-              -sdk iphoneos \
-              -destination 'generic/platform=iOS' \
-              -archivePath ../build/GoldPriceCalculator.xcarchive \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              DEVELOPMENT_TEAM="" \
-              PROVISIONING_PROFILE_SPECIFIER=""
-          else
-            SCHEME=$(basename "$WORKSPACE" .xcworkspace)
-            echo "Using workspace: $WORKSPACE | scheme: $SCHEME"
-            xcodebuild archive \
-              -workspace "$WORKSPACE" \
-              -scheme "$SCHEME" \
-              -configuration Release \
-              -sdk iphoneos \
-              -destination 'generic/platform=iOS' \
-              -archivePath ../build/GoldPriceCalculator.xcarchive \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              DEVELOPMENT_TEAM="" \
-              PROVISIONING_PROFILE_SPECIFIER=""
+          # Better detection: find the actual .xcworkspace directory
+          WORKSPACE_DIR=$(find . -type d -name "*.xcworkspace" -maxdepth 2 | head -n 1 | sed 's|^\./||')
+          if [ -z "$WORKSPACE_DIR" ]; then
+            echo "ERROR: No .xcworkspace directory found in ios/!"
+            ls -laR .
+            exit 1
           fi
+          echo "Found workspace directory: $WORKSPACE_DIR"
+
+          # Scheme is usually the basename without .xcworkspace
+          SCHEME=$(basename "$WORKSPACE_DIR" .xcworkspace)
+          echo "Using scheme: $SCHEME"
+
+          xcodebuild archive \
+            -workspace "$WORKSPACE_DIR" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath ../build/GoldPriceCalculator.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER=""
+
           cd ..
-          echo "Archive contents:"
-          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ || echo "No .app generated!"
+          echo "Archive created? Listing Applications:"
+          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ || echo "No Applications folder - archive likely empty/failed!"
           mkdir -p ipa/Payload
-          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app ipa/Payload/ || { echo "No .app to copy!"; exit 1; }
-          echo "Payload contents:"
+          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app ipa/Payload/ 2>/dev/null || { echo "Failed to copy .app - check if it exists above!"; exit 1; }
+          echo "Payload after copy:"
           ls -la ipa/Payload/
           cd ipa
           zip -r ../unsigned.ipa Payload
           cd ..
-          echo "IPA created:"
-          ls -lh unsigned.ipa  # Expect ~20-50MB for minimal app
+          echo "Final IPA:"
+          ls -lh unsigned.ipa
 
     artifacts:
       - unsigned.ipa
       - build/**/*.xcarchive
-      - ios/**  # For debug if needed
 
     publishing:
       email:
