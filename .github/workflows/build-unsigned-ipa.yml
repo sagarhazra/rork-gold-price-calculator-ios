@@ -1,14 +1,14 @@
 name: Build Unsigned iOS IPA
 
 on:
-  workflow_dispatch:  # Allows you to run it manually from GitHub UI
+  workflow_dispatch:  # Allows manual run from GitHub UI
 
 jobs:
   build:
-    runs-on: macos-latest  # GitHub provides a free Mac runner
+    runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4  # Downloads your repo code
+      - uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
