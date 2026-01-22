@@ -43,11 +43,7 @@
     },
     "updates": {
       "enabled": true,
-      "url": "<UNKNOWN>",
-      "checkAutomatically": "ALWAYS",
-      "fallbackToCacheTimeout": 0,
-      "useEmbeddedUpdate": true,
-      "disableAntiBrickingMeasures": false
+      "url": "<UNKNOWN>"
     }
   }
 }
