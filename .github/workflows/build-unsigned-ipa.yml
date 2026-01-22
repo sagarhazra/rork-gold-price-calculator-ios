@@ -1,17 +1,25 @@
 name: Build Unsigned iOS IPA
 
 on:
-  workflow_dispatch:  # Allows manual run from GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-14  # Try macos-14 for potentially faster performance (less loaded)
+    timeout-minutes: 90  # Give more time but fail cleanly
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: $$   {{ runner.os }}-bun-   $${{ hashFiles('bun.lockb') }}
 
       - name: Install dependencies
         run: bun install
@@ -19,14 +27,21 @@ jobs:
       - name: Expo Prebuild
         run: bunx expo prebuild --platform ios --clean
 
+      - name: Debug: List ios folder after prebuild
+        run: ls -laR ios/ || echo "ios folder missing!"
+
       - name: Pod Install
         run: |
           cd ios
           pod install --repo-update
 
+      - name: Debug: List ios after pod install
+        run: ls -laR ios/
+
       - name: Build Unsigned Archive
         run: |
           cd ios
+          xcodebuild clean -workspace GoldPriceCalculator.xcworkspace -scheme GoldPriceCalculator || echo "Clean failed but continue"
           xcodebuild archive \
             -workspace GoldPriceCalculator.xcworkspace \
             -scheme GoldPriceCalculator \
@@ -38,16 +53,26 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            -verbose  # More output to see progress
+
+      - name: Debug: Check archive
+        run: |
+          ls -la build/GoldPriceCalculator.xcarchive || echo "Archive missing!"
+          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ 2>/dev/null || echo "No .app!"
 
       - name: Create Unsigned IPA
         run: |
           mkdir -p Payload
-          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app Payload/
+          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app Payload/ || exit 1
           zip -r unsigned.ipa Payload
 
-      - name: Upload IPA Artifact
+      - name: Show IPA size
+        run: ls -lh unsigned.ipa || echo "IPA not created!"
+
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-ipa
           path: unsigned.ipa
+          if-no-files-found: warn
