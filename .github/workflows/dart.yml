@@ -1,82 +1,42 @@
-name: Build Unsigned iOS IPA
+name: iOS-ipa-build
 
 on:
-  workflow_dispatch:  # Run manually from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-ios:
+    name: 🎉 iOS Build
     runs-on: macos-latest
-    timeout-minutes: 60  # Fail automatically after 60 minutes if stuck
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
+      - uses: subosito/flutter-action@v2
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb') }}
+          channel: 'stable'
+          architecture: x64
+      - run: flutter pub get
+      
 
-      - name: Install dependencies
-        run: bun install
+      - run: pod repo update
+        working-directory: ios
 
-      - name: Expo Prebuild (generate iOS project)
-        run: bunx expo prebuild --platform ios --clean
+      - run: flutter build ios --release --no-codesign
 
-      - name: List generated iOS files (debug)
-        run: ls -la ios/
+      - run: mkdir Payload
+        working-directory: build/ios/iphoneos
 
-      - name: Pod Install
-        run: |
-          cd ios
-          pod install --repo-update
+      - run: mv Runner.app/ Payload
+        working-directory: build/ios/iphoneos
 
-      - name: List after pod install (debug)
-        run: ls -la ios/
+      - name: Zip output
+        run: zip -qq -r -9 FlutterIpaExport.ipa Payload
+        working-directory: build/ios/iphoneos
 
-      - name: Build Unsigned Archive
-        run: |
-          cd ios
-          # Clean first to avoid stale build artifacts
-          xcodebuild clean \
-            -workspace GoldPriceCalculator.xcworkspace \
-            -scheme GoldPriceCalculator
-
-          # Archive (unsigned)
-          xcodebuild archive \
-            -workspace GoldPriceCalculator.xcworkspace \
-            -scheme GoldPriceCalculator \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -archivePath ../build/GoldPriceCalculator.xcarchive \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER=""
-
-      - name: Check archive contents (debug)
-        run: |
-          ls -la build/GoldPriceCalculator.xcarchive || echo "Archive folder missing!"
-          ls -la build/GoldPriceCalculator.xcarchive/Products/Applications/ 2>/dev/null || echo "No .app bundle found!"
-
-      - name: Create Unsigned IPA
-        run: |
-          mkdir -p Payload
-          cp -r build/GoldPriceCalculator.xcarchive/Products/Applications/*.app Payload/ || echo "Copy failed - no .app found"
-          zip -r unsigned.ipa Payload
-
-      - name: Show IPA size (debug)
-        run: ls -lh unsigned.ipa || echo "IPA file not created!"
-
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: unsigned-ipa
-          path: unsigned.ipa
-          if-no-files-found: warn  # Don't fail if no IPA (for debug)
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/ios/iphoneos/FlutterIpaExport.ipa
+          tag: v1.0
+          overwrite: true
+          body: "This is first release"
